@@ -10,7 +10,7 @@ WORKDIR /app
 
 # Copy project files
 COPY package.json package-lock.json ./
-COPY main.wasp schema.prisma tsconfig*.json ./
+COPY main.wasp schema.prisma tsconfig*.json .wasproot .waspignore ./
 COPY src/ src/
 
 # Install dependencies
