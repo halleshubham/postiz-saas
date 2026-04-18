@@ -104,57 +104,43 @@ wasp start
 
 ## Production Deployment
 
-### 1. Build the project
-
-```bash
-wasp build
-```
-
-Output goes to `.wasp/out/`.
-
-### 2. Generate the Postiz Prisma client
-
-```bash
-npx prisma generate --schema=src/postiz-db/schema.prisma
-```
-
-### 3. Build the web client
-
-```bash
-cd .wasp/out/web-app
-npm install
-REACT_APP_API_URL=https://your-domain.com npm run build
-cd ../../..
-```
-
-Replace `https://your-domain.com` with your actual production URL.
-
-### 4. Configure production environment
+### 1. Configure production environment
 
 Edit `.env.server.production` with your real values:
 
 ```bash
+cp .env.server.production.example .env.server.production
 vim .env.server.production
 ```
 
-### 5. Deploy with Docker Compose
+### 2. Deploy with Docker Compose
 
 ```bash
 docker compose up -d --build
 ```
 
-This starts three services:
+This starts two services:
 
-| Service | Description |
-|---------|-------------|
-| `db` | PostgreSQL 16 for the SaaS database |
-| `server` | Wasp API server (port 3001) |
-| `nginx` | Serves the client SPA + reverse proxies API requests |
+| Service | Port | Description |
+|---------|------|-------------|
+| `db` | 5432 (internal) | PostgreSQL 16 for the SaaS database |
+| `app` | 3000, 3001 | Wasp app — client (3000) + API server (3001) |
 
-### 6. Run database migrations
+The Docker build installs Wasp CLI, runs `wasp build`, generates the Postiz Prisma client, and uses `wasp build start` to serve both the client SPA and the API server.
+
+### 3. Set the API URL
+
+The `REACT_APP_API_URL` env var in `docker-compose.yml` tells the client where the API lives. Update it for your domain:
+
+```yaml
+environment:
+  REACT_APP_API_URL: https://your-domain.com
+```
+
+### 4. Run database migrations
 
 ```bash
-docker compose exec server npx prisma migrate deploy --schema=../db/schema.prisma
+docker compose exec app wasp db push
 ```
 
 ---
@@ -164,8 +150,8 @@ docker compose exec server npx prisma migrate deploy --schema=../db/schema.prism
 ```
 ├── main.wasp                          # App config, routes, operations
 ├── schema.prisma                      # SaaS database schema
+├── Dockerfile                         # Production Docker build
 ├── docker-compose.yml                 # Production Docker setup
-├── nginx/default.conf                 # Nginx reverse proxy config
 ├── .env.server                        # Dev environment variables
 ├── .env.server.production             # Production environment variables
 │
