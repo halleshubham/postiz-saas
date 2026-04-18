@@ -3,8 +3,8 @@ FROM node:24.14.1-alpine3.23
 RUN apk --no-cache -U upgrade
 RUN apk add --no-cache openssl python3 build-base curl
 
-# Install Wasp CLI
-RUN npm i -g @wasp.sh/wasp-cli
+# Install Wasp CLI (for wasp build) and serve (for static client files)
+RUN npm i -g @wasp.sh/wasp-cli serve
 
 WORKDIR /app
 
@@ -19,13 +19,20 @@ RUN npm install
 # Generate the Postiz Prisma client (second DB)
 RUN npx prisma generate --schema=src/postiz-db/schema.prisma
 
-# Build the Wasp project
+# Generate Wasp output (.wasp/out/)
 RUN wasp build
 
-# Expose server and client ports
+# Build the server bundle (follows Wasp's own Dockerfile pattern)
+RUN cd .wasp/out/server && npm install
+RUN cd .wasp/out/server && npx prisma generate --schema='../db/schema.prisma'
+RUN cd .wasp/out/server && npm run bundle
+
+# Install web-app dependencies (client is built at startup with correct API URL)
+RUN cd .wasp/out/web-app && npm install
+
 EXPOSE 3001 3000
 
-# wasp build start serves both server (3001) and client (3000).
-# Server env vars are passed via --server-env-file.
-# Wasp auto-sets REACT_APP_API_URL based on WASP_SERVER_URL in the server env file.
-ENTRYPOINT ["wasp", "build", "start", "--server-env-file", "/app/env/server.env"]
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+ENTRYPOINT ["/app/entrypoint.sh"]
