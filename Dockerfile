@@ -27,8 +27,5 @@ EXPOSE 3001 3000
 
 # wasp build start serves both server (3001) and client (3000).
 # Server env vars are passed via --server-env-file.
-# REACT_APP_API_URL tells the client where the API lives.
-ENTRYPOINT ["sh", "-c", \
-  "wasp build start \
-    --server-env-file /app/env/server.env \
-    --client-env REACT_APP_API_URL=${CLIENT_API_URL}"]
+# Wasp auto-sets REACT_APP_API_URL based on WASP_SERVER_URL in the server env file.
+ENTRYPOINT ["wasp", "build", "start", "--server-env-file", "/app/env/server.env"]

@@ -27,8 +27,6 @@ services:
     ports:
       - "3000:3000"
       - "3001:3001"
-    environment:
-      CLIENT_API_URL: ${CLIENT_API_URL:-http://localhost:3001}
     volumes:
       # Mount your server env file into the container
       - ./.env.server.production:/app/env/server.env:ro
