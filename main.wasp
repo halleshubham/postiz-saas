@@ -88,10 +88,10 @@ app OpenSaaS {
   },
 
   emailSender: {
-    provider: Dummy, // Logs verification/reset links to the server console for local development
+    provider: SMTP,
     defaultFrom: {
-      name: "Shacky Social",
-      email: "support@shackyapps.in"
+      name: "Shacky App",
+      email: "halleshubham.office@gmail.com"
     },
   },
 }

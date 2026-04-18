@@ -1,69 +1,238 @@
 # Shacky Social
 
-Company-focused SaaS for selling access to your self-hosted Postiz instance.
+Subscription portal for selling access to your self-hosted [Postiz](https://postiz.com) instance. Users sign up, pick a plan, and get a fully provisioned Postiz workspace — no API tokens, no self-hosting required on their end.
 
-This app is based on `wasp-lang/open-saas` and is intentionally scoped to company customers, not resellers.
+Built on [Wasp](https://wasp.sh) (React + Node.js + Prisma) with Stripe billing.
 
-## What This App Does
+## Architecture
 
-- Companies sign up and create one company workspace.
-- Company admins save a Postiz API token or use the server fallback key.
-- Companies sync social accounts already connected in Postiz.
-- Company users compose and schedule posts through your Postiz instance.
-- Starter/Growth subscription plans control seats, accounts, and monthly scheduled posts.
-- Open SaaS still provides auth, Stripe-ready billing, admin dashboard, email auth, and Wasp/Prisma wiring.
-
-## Local Database
-
-The local database URL is:
-
-```text
-postgresql://postiz_saas:postiz_saas@localhost:5432/postiz_saas
+```
+┌─────────────────┐       ┌──────────────────┐       ┌──────────────────┐
+│  Shacky Social   │       │  SaaS Database   │       │  Postiz Database │
+│  (this app)      │──────▶│  (PostgreSQL)    │       │  (PostgreSQL)    │
+│                  │       │  Users, Companies│       │  Users, Orgs,    │
+│  - Signup/Login  │       │  Subscriptions   │       │  Subscriptions   │
+│  - Stripe billing│       └──────────────────┘       └──────────────────┘
+│  - Dashboard     │                                         ▲
+│  - Legal pages   │─────────────────────────────────────────┘
+└─────────────────┘        Direct DB writes on
+        │                  signup & payment events
+        │
+        ▼
+┌──────────────────┐
+│  Self-hosted     │
+│  Postiz instance │
+│  app.shackyapps.in│
+└──────────────────┘
 ```
 
-## Commands
+**Two databases:**
+- **SaaS DB** (`DATABASE_URL`) — Managed by Wasp/Prisma. Stores portal users, companies, payment state.
+- **Postiz DB** (`POSTIZ_DATABASE_URL`) — Your self-hosted Postiz PostgreSQL. This app writes User, Organization, and Subscription rows directly on signup and payment events.
 
-Use nvm:
+---
+
+## Prerequisites
+
+- **Node.js 20+** (use nvm: `nvm use 20`)
+- **Wasp CLI**: `npm i -g @wasp.sh/wasp-cli`
+- **PostgreSQL** running locally (or via Docker) for the SaaS database
+- **A self-hosted Postiz instance** with its PostgreSQL accessible from this app
+
+---
+
+## Development Setup
+
+### 1. Install dependencies
 
 ```bash
-source ~/.nvm/nvm.sh
-nvm use 20.19.3
+npm install
 ```
 
-Install dependencies:
+### 2. Configure environment
+
+Copy and edit the env file:
 
 ```bash
-npm install --registry=https://registry.npmjs.org/
+cp .env.server .env.server.local  # optional: keep a local copy
 ```
 
-Install Wasp CLI if missing:
+Key variables in `.env.server`:
+
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | SaaS PostgreSQL connection string |
+| `POSTIZ_DATABASE_URL` | Postiz PostgreSQL connection string |
+| `POSTIZ_INSTANCE_URL` | URL of your Postiz instance (e.g. `https://app.shackyapps.in`) |
+| `SMTP_HOST` | SMTP server (e.g. `smtp.gmail.com`) |
+| `SMTP_PORT` | SMTP port (e.g. `465`) |
+| `SMTP_USERNAME` | SMTP username |
+| `SMTP_PASSWORD` | SMTP password / app password |
+| `STRIPE_API_KEY` | Stripe secret key |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
+
+### 3. Generate the Postiz Prisma client
+
+This project uses a second Prisma client to write directly to the Postiz database. Generate it before starting:
 
 ```bash
-npm i -g @wasp.sh/wasp-cli --registry=https://registry.npmjs.org/
+npx prisma generate --schema=src/postiz-db/schema.prisma
 ```
 
-Run migrations:
+### 4. Set up the SaaS database
 
 ```bash
+# Start the local PostgreSQL (if using docker-compose for dev):
+docker compose up db -d
+
+# Run migrations:
 wasp db migrate-dev
 ```
 
-Start the app:
+If the DB user lacks `CREATEDB` permission, use `wasp db push` instead.
+
+### 5. Start the app
 
 ```bash
 wasp start
 ```
 
-## Important Files
+- Client: `http://localhost:3000`
+- Server: `http://localhost:3001`
 
-- `main.wasp` - routes, auth, operations, entities
-- `schema.prisma` - users, companies, Postiz integrations, scheduled posts
-- `src/postiz/operations.ts` - company workspace, token storage, sync, scheduling
-- `src/postiz/*Page.tsx` - dashboard, composer, integrations, settings
-- `.env.server` - local DB/Postiz/payment env
+---
 
-## Postiz Notes
+## Production Deployment
 
-Set `POSTIZ_BASE_URL=https://app.shackyapps.in/public/v1`.
+### 1. Build the project
 
-Companies can save a Postiz API token in `/company/settings`. If a company has no saved token, the server uses `POSTIZ_ADMIN_API_KEY` as a fallback.
+```bash
+wasp build
+```
+
+Output goes to `.wasp/out/`.
+
+### 2. Generate the Postiz Prisma client
+
+```bash
+npx prisma generate --schema=src/postiz-db/schema.prisma
+```
+
+### 3. Build the web client
+
+```bash
+cd .wasp/out/web-app
+npm install
+REACT_APP_API_URL=https://your-domain.com npm run build
+cd ../../..
+```
+
+Replace `https://your-domain.com` with your actual production URL.
+
+### 4. Configure production environment
+
+Edit `.env.server.production` with your real values:
+
+```bash
+vim .env.server.production
+```
+
+### 5. Deploy with Docker Compose
+
+```bash
+docker compose up -d --build
+```
+
+This starts three services:
+
+| Service | Description |
+|---------|-------------|
+| `db` | PostgreSQL 16 for the SaaS database |
+| `server` | Wasp API server (port 3001) |
+| `nginx` | Serves the client SPA + reverse proxies API requests |
+
+### 6. Run database migrations
+
+```bash
+docker compose exec server npx prisma migrate deploy --schema=../db/schema.prisma
+```
+
+---
+
+## Project Structure
+
+```
+├── main.wasp                          # App config, routes, operations
+├── schema.prisma                      # SaaS database schema
+├── docker-compose.yml                 # Production Docker setup
+├── nginx/default.conf                 # Nginx reverse proxy config
+├── .env.server                        # Dev environment variables
+├── .env.server.production             # Production environment variables
+│
+├── src/
+│   ├── postiz/
+│   │   ├── operations.ts              # getCompanyDashboard, createCompany
+│   │   ├── DashboardPage.tsx          # Portal: subscription + "Go to Postiz"
+│   │   └── CompanyOnboarding.tsx      # First-time workspace creation
+│   │
+│   ├── postiz-db/
+│   │   ├── schema.prisma              # Postiz DB schema subset
+│   │   ├── postizPrismaClient.ts      # Second PrismaClient for Postiz DB
+│   │   ├── postizUserService.ts       # Create/delete users, sync subscriptions
+│   │   └── postiz-prisma-client.d.ts  # Ambient types for build compatibility
+│   │
+│   ├── payment/
+│   │   ├── user.ts                    # Subscription sync (SaaS + Postiz DB)
+│   │   ├── plans.ts                   # Plan definitions (Starter, Growth)
+│   │   └── stripe/webhook.ts          # Stripe webhook handler
+│   │
+│   ├── legal/
+│   │   ├── PrivacyPolicyPage.tsx
+│   │   └── TermsOfServicePage.tsx
+│   │
+│   ├── landing-page/
+│   │   └── LandingPage.tsx            # Marketing page
+│   │
+│   ├── auth/                          # Login, signup, password reset
+│   ├── user/                          # Account, dropdown menu
+│   ├── admin/                         # Admin dashboard
+│   └── client/components/             # Shared UI (NavBar, buttons, etc.)
+```
+
+---
+
+## Subscription Plans
+
+| Plan | Postiz Tier | Channels | Posts/month | Price |
+|------|-------------|----------|-------------|-------|
+| Free | (none) | 0 | 0 | Free |
+| Starter | STANDARD | 5 | 400 | TBD |
+| Growth | PRO | 30 | 1,000,000 | TBD |
+
+When a Stripe payment event fires, the app updates both the SaaS User record and the Postiz Subscription table.
+
+---
+
+## Useful Commands
+
+```bash
+# Start dev server
+wasp start
+
+# Generate Postiz Prisma client
+npx prisma generate --schema=src/postiz-db/schema.prisma
+
+# Run SaaS DB migrations
+wasp db migrate-dev
+
+# Push schema without migrations (no CREATEDB needed)
+wasp db push
+
+# Build for production
+wasp build
+
+# Production Docker
+docker compose up -d --build
+docker compose logs -f
+docker compose down
+```
