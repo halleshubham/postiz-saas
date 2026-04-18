@@ -13,11 +13,8 @@ import {
 import { throttleWithTrailingInvocation } from "../../../shared/utils";
 import { UserDropdown } from "../../../user/UserDropdown";
 import { UserMenuItems } from "../../../user/UserMenuItems";
-import { useIsLandingPage } from "../../hooks/useIsLandingPage";
-import logo from "../../static/logo.webp";
 import { cn } from "../../utils";
 import DarkModeSwitcher from "../DarkModeSwitcher";
-import { Announcement } from "./Announcement";
 
 export interface NavigationItem {
   name: string;
@@ -30,7 +27,6 @@ export default function NavBar({
   navigationItems: NavigationItem[];
 }) {
   const [isScrolled, setIsScrolled] = useState(false);
-  const isLandingPage = useIsLandingPage();
 
   useEffect(() => {
     const throttledHandler = throttleWithTrailingInvocation(() => {
@@ -47,7 +43,6 @@ export default function NavBar({
 
   return (
     <>
-      {isLandingPage && <Announcement />}
       <header
         className={cn(
           "sticky top-0 z-50 transition-all duration-300",
@@ -77,13 +72,12 @@ export default function NavBar({
                 to={routes.LandingPageRoute.to}
                 className="text-foreground hover:text-primary flex items-center transition-colors duration-300 ease-in-out"
               >
-                <NavLogo isScrolled={isScrolled} />
                 <span
                   className={cn(
                     "text-foreground font-semibold leading-6 transition-all duration-300",
                     {
-                      "ml-2 text-sm": !isScrolled,
-                      "ml-2 text-xs": isScrolled,
+                      "text-sm": !isScrolled,
+                      "text-xs": isScrolled,
                     },
                   )}
                 >
@@ -180,8 +174,7 @@ function NavBarMobileMenu({
           <SheetHeader>
             <SheetTitle className="flex items-center">
               <WaspRouterLink to={routes.LandingPageRoute.to}>
-                <span className="sr-only">Shacky Social</span>
-                <NavLogo isScrolled={false} />
+                <span className="font-semibold">Shacky Social</span>
               </WaspRouterLink>
             </SheetTitle>
           </SheetHeader>
@@ -244,13 +237,3 @@ function renderNavigationItems(
   });
 }
 
-const NavLogo = ({ isScrolled }: { isScrolled: boolean }) => (
-  <img
-    className={cn("transition-all duration-500", {
-      "size-8": !isScrolled,
-      "size-7": isScrolled,
-    })}
-    src={logo}
-    alt="Shacky Social"
-  />
-);

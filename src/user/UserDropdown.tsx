@@ -30,18 +30,31 @@ export function UserDropdown({ user }: { user: Partial<UserEntity> }) {
           if (item.isAuthRequired && !user) return null;
           if (item.isAdminOnly && (!user || !user.isAdmin)) return null;
 
+          const linkClass = "flex w-full items-center gap-3";
+
           return (
             <DropdownMenuItem key={item.name}>
-              <WaspRouterLink
-                to={item.to}
-                onClick={() => {
-                  setOpen(false);
-                }}
-                className="flex w-full items-center gap-3"
-              >
-                <item.icon size="1.1rem" />
-                {item.name}
-              </WaspRouterLink>
+              {"isExternal" in item && item.isExternal ? (
+                <a
+                  href={item.to}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setOpen(false)}
+                  className={linkClass}
+                >
+                  <item.icon size="1.1rem" />
+                  {item.name}
+                </a>
+              ) : (
+                <WaspRouterLink
+                  to={item.to as any}
+                  onClick={() => setOpen(false)}
+                  className={linkClass}
+                >
+                  <item.icon size="1.1rem" />
+                  {item.name}
+                </WaspRouterLink>
+              )}
             </DropdownMenuItem>
           );
         })}

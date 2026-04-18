@@ -11,6 +11,9 @@ export const UserMenuItems = ({
   user?: Partial<User>;
   onItemClick?: () => void;
 }) => {
+  const linkClass =
+    "text-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium leading-7 transition-colors";
+
   return (
     <>
       {userMenuItems.map((item) => {
@@ -19,14 +22,27 @@ export const UserMenuItems = ({
 
         return (
           <li key={item.name}>
-            <WaspRouterLink
-              to={item.to}
-              onClick={onItemClick}
-              className="text-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium leading-7 transition-colors"
-            >
-              <item.icon size="1.1rem" />
-              {item.name}
-            </WaspRouterLink>
+            {"isExternal" in item && item.isExternal ? (
+              <a
+                href={item.to}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={onItemClick}
+                className={linkClass}
+              >
+                <item.icon size="1.1rem" />
+                {item.name}
+              </a>
+            ) : (
+              <WaspRouterLink
+                to={item.to as any}
+                onClick={onItemClick}
+                className={linkClass}
+              >
+                <item.icon size="1.1rem" />
+                {item.name}
+              </WaspRouterLink>
+            )}
           </li>
         );
       })}
@@ -36,7 +52,7 @@ export const UserMenuItems = ({
             logout();
             onItemClick?.();
           }}
-          className="text-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium leading-7 transition-colors"
+          className={linkClass}
         >
           <LogOut size="1.1rem" />
           Log Out

@@ -27,7 +27,7 @@ export async function createPostizUser(
   const hashedPassword = await hashPassword(password);
   const apiKey = generateApiKey();
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     const user = await tx.user.create({
       data: {
         email,
@@ -63,7 +63,7 @@ export async function createPostizUser(
  * Delete a user and their organization from the Postiz database.
  */
 export async function deletePostizUser(email: string) {
-  const prisma = getPostizPrisma();
+  const prisma = getPostizPrisma() as any;
 
   const user = await prisma.user.findUnique({
     where: { email },
@@ -72,8 +72,7 @@ export async function deletePostizUser(email: string) {
 
   if (!user) return;
 
-  // Delete organizations the user belongs to, then the user
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: any) => {
     for (const membership of user.organizationUsers) {
       await tx.organization.delete({
         where: { id: membership.organizationId },
@@ -85,8 +84,6 @@ export async function deletePostizUser(email: string) {
 
 /**
  * Create or update a Subscription row in the Postiz database tied to an organization.
- * `orgIdentifier` is the Stripe customer ID stored on the SaaS User, which we use
- * to look up which Postiz organization this belongs to via the Subscription.identifier field.
  */
 export async function updatePostizSubscription({
   email,
@@ -105,9 +102,8 @@ export async function updatePostizSubscription({
   cancelAt?: Date | null;
   identifier?: string;
 }) {
-  const prisma = getPostizPrisma();
+  const prisma = getPostizPrisma() as any;
 
-  // Find the Postiz user by email, then their organization
   const postizUser = await prisma.user.findUnique({
     where: { email },
     include: {
@@ -142,7 +138,7 @@ export async function updatePostizSubscription({
       totalChannels,
       postsPerMonth,
       cancelAt: cancelAt ?? null,
-      deletedAt: null, // Re-activate if previously soft-deleted
+      deletedAt: null,
       ...(identifier ? { identifier } : {}),
     },
   });
@@ -152,7 +148,7 @@ export async function updatePostizSubscription({
  * Soft-delete a Postiz subscription (set deletedAt).
  */
 export async function softDeletePostizSubscription(email: string) {
-  const prisma = getPostizPrisma();
+  const prisma = getPostizPrisma() as any;
 
   const postizUser = await prisma.user.findUnique({
     where: { email },

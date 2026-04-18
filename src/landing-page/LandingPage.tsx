@@ -39,11 +39,7 @@ export default function LandingPage() {
     <div className="bg-background text-foreground">
       {/* Hero */}
       <section className="relative min-h-[84vh] overflow-hidden">
-        <img
-          src="/public-banner.webp"
-          alt="Team planning social media content"
-          className="absolute inset-0 h-full w-full object-cover opacity-20"
-        />
+        <div className="from-primary/5 via-background to-background absolute inset-0 bg-gradient-to-b" />
         <div className="relative mx-auto max-w-6xl px-6 py-24">
           <p className="text-primary text-sm font-semibold uppercase tracking-wide">
             Powered by self-hosted Postiz
