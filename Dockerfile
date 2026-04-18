@@ -31,4 +31,4 @@ EXPOSE 3001 3000
 ENTRYPOINT ["sh", "-c", \
   "wasp build start \
     --server-env-file /app/env/server.env \
-    --client-env REACT_APP_API_URL=${REACT_APP_API_URL}"]
+    --client-env REACT_APP_API_URL=${CLIENT_API_URL}"]
