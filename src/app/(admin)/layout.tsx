@@ -13,6 +13,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <span className="font-semibold">Admin</span>
         <Link href="/admin" className="text-muted-foreground hover:text-foreground">Overview</Link>
         <Link href="/admin/users" className="text-muted-foreground hover:text-foreground">Users</Link>
+        <Link href="/admin/workspaces" className="text-muted-foreground hover:text-foreground">Workspaces</Link>
         <Link href="/dashboard" className="ml-auto text-muted-foreground hover:text-foreground">← Back to app</Link>
       </header>
       <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
