@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { sendPasswordResetEmail } from "@/lib/auth-helpers";
+import { sendPasswordResetEmail } from "@/lib/email-helpers";
 
 export async function POST(req: NextRequest) {
   try {

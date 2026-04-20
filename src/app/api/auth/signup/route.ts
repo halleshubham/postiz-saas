@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { hashPassword, isAdminEmail, sendVerificationEmail } from "@/lib/auth-helpers";
+import { hashPassword, isAdminEmail } from "@/lib/auth-helpers";
+import { sendVerificationEmail } from "@/lib/email-helpers";
 
 const schema = z.object({
   email: z.email(),
