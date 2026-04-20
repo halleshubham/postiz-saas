@@ -4,7 +4,7 @@ RUN apk add --no-cache openssl
 FROM base AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 COPY . .
 RUN npx prisma generate --schema=prisma/schema.prisma
 RUN npx prisma generate --schema=prisma-postiz/schema.prisma
