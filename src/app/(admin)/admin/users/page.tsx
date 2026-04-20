@@ -6,13 +6,23 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+interface PostizInfo {
+  activated: boolean;
+  orgName: string | null;
+  tier: string | null;
+  channels: number | null;
+  postsPerMonth: number | null;
+  deletedAt: string | null;
+}
+
 interface UserRow {
   id: string;
   email: string;
   isAdmin: boolean;
-  subscriptionStatus: string | null;
   subscriptionPlan: string | null;
+  subscriptionStatus: string | null;
   createdAt: string;
+  postiz: PostizInfo | null;
 }
 
 interface PageData {
@@ -33,8 +43,7 @@ export default function AdminUsersPage() {
     const params = new URLSearchParams({ page: String(page), pageSize: "20" });
     if (search) params.set("search", search);
     const res = await fetch(`/api/admin/users?${params}`);
-    const json = await res.json();
-    setData(json);
+    setData(await res.json());
     setLoading(false);
   }, [page, search]);
 
@@ -69,37 +78,59 @@ export default function AdminUsersPage() {
             {data ? `${data.total} total users` : "Loading…"}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Email</th>
-                  <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Plan</th>
-                  <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Status</th>
-                  <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Joined</th>
-                  <th className="text-right py-2 font-medium text-muted-foreground">Admin</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Email</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Plan</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Postiz org</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Postiz tier</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Channels</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Joined</th>
+                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Admin</th>
                 </tr>
               </thead>
               <tbody>
                 {loading && (
-                  <tr><td colSpan={5} className="py-4 text-center text-muted-foreground">Loading…</td></tr>
+                  <tr><td colSpan={8} className="py-6 text-center text-muted-foreground">Loading…</td></tr>
                 )}
                 {!loading && data?.users.map((u) => (
-                  <tr key={u.id} className="border-b last:border-0">
-                    <td className="py-2 pr-4">{u.email}</td>
-                    <td className="py-2 pr-4 capitalize">{u.subscriptionPlan ?? "—"}</td>
-                    <td className="py-2 pr-4">
+                  <tr key={u.id} className="border-b last:border-0 hover:bg-muted/30">
+                    <td className="py-3 px-4">{u.email}</td>
+                    <td className="py-3 px-4 capitalize">{u.subscriptionPlan ?? "—"}</td>
+                    <td className="py-3 px-4">
                       {u.subscriptionStatus ? (
                         <Badge variant={u.subscriptionStatus === "active" ? "default" : "secondary"}>
                           {u.subscriptionStatus.replace("_", " ")}
                         </Badge>
                       ) : "—"}
                     </td>
-                    <td className="py-2 pr-4 text-muted-foreground">
+                    <td className="py-3 px-4">
+                      {u.postiz ? (
+                        <span className={u.postiz.activated ? "" : "text-muted-foreground line-through"}>
+                          {u.postiz.orgName ?? "—"}
+                        </span>
+                      ) : <span className="text-muted-foreground text-xs">no account</span>}
+                    </td>
+                    <td className="py-3 px-4">
+                      {u.postiz?.tier ? (
+                        <Badge variant={u.postiz.deletedAt ? "secondary" : "outline"}>
+                          {u.postiz.tier}{u.postiz.deletedAt ? " (cancelled)" : ""}
+                        </Badge>
+                      ) : "—"}
+                    </td>
+                    <td className="py-3 px-4 text-muted-foreground">
+                      {u.postiz?.channels != null
+                        ? `${u.postiz.channels} ch / ${(u.postiz.postsPerMonth ?? 0).toLocaleString()} posts`
+                        : "—"}
+                    </td>
+                    <td className="py-3 px-4 text-muted-foreground">
                       {new Date(u.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="py-2 text-right">
+                    <td className="py-3 px-4 text-right">
                       <Button
                         size="sm"
                         variant={u.isAdmin ? "default" : "outline"}
@@ -111,13 +142,13 @@ export default function AdminUsersPage() {
                   </tr>
                 ))}
                 {!loading && data?.users.length === 0 && (
-                  <tr><td colSpan={5} className="py-4 text-center text-muted-foreground">No users found</td></tr>
+                  <tr><td colSpan={8} className="py-6 text-center text-muted-foreground">No users found</td></tr>
                 )}
               </tbody>
             </table>
           </div>
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center justify-between px-4 py-3 border-t">
               <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Previous</Button>
               <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
               <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Next</Button>
