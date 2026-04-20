@@ -6,4 +6,3 @@ node_modules
 *.md
 .wasp
 postiz-app
-prisma-postiz
