@@ -1,18 +1,16 @@
 {
-  "name": "opensaas",
-  "type": "module",
-  "workspaces": [
-    ".wasp/out/*",
-    ".wasp/out/sdk/wasp"
-  ],
+  "name": "shacky-social",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "postinstall": "prisma generate --schema=prisma/schema.prisma && prisma generate --schema=prisma-postiz/schema.prisma"
+  },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.523.0",
-    "@aws-sdk/s3-presigned-post": "^3.750.0",
-    "@aws-sdk/s3-request-presigner": "^3.523.0",
-    "@google-analytics/data": "4.1.0",
     "@hookform/resolvers": "^5.1.1",
-    "@lemonsqueezy/lemonsqueezy.js": "^3.2.0",
-    "@polar-sh/sdk": "^0.34.3",
+    "@prisma/client": "^5.19.1",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-checkbox": "^1.3.2",
@@ -25,20 +23,19 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.5",
     "@radix-ui/react-toast": "^1.2.14",
-    "@tailwindcss/forms": "^0.5.11",
-    "@tailwindcss/typography": "^0.5.19",
     "apexcharts": "5.10.1",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.525.0",
-    "openai": "^6.27.0",
-    "prettier": "3.1.1",
-    "prettier-plugin-tailwindcss": "^0.7.2",
+    "next": "^15.3.1",
+    "next-auth": "5.0.0-beta.25",
+    "next-themes": "^0.4.6",
+    "nodemailer": "^6.9.16",
     "react": "^19.2.1",
     "react-apexcharts": "2.1.0",
     "react-dom": "^19.2.1",
     "react-hook-form": "^7.60.0",
-    "react-router": "^7.12.0",
     "stripe": "18.1.0",
     "tailwind-merge": "^2.2.1",
     "tailwindcss": "^4.1.18",
@@ -47,14 +44,13 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@faker-js/faker": "8.3.1",
-    "@tailwindcss/vite": "^4.1.18",
+    "@tailwindcss/postcss": "^4.1.18",
     "@types/bcryptjs": "^2.4.6",
-    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "@types/nodemailer": "^6.4.17",
     "@types/react": "^19.2.7",
-    "bcryptjs": "^3.0.3",
-    "prisma": "5.19.1",
-    "typescript": "5.9.3",
-    "vite": "^7.0.6"
+    "@types/react-dom": "^19.0.0",
+    "prisma": "^5.19.1",
+    "typescript": "^5.9.3"
   }
 }

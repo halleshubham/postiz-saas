@@ -1,0 +1,93 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTIZ_DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/postiz-client"
+}
+
+// Subset of Postiz schema: only the models we need to manage from the SaaS portal
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String
+  providerName  String   @default("LOCAL")
+  activated     Boolean  @default(true)
+  timezone      Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  organizationUsers UserOrganization[]
+}
+
+model Organization {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  apiKey      String   @unique
+  allowTrial  Boolean  @default(true)
+  isTrailing  Boolean  @default(true) // Note: Postiz typo is intentional — matches their schema
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users        UserOrganization[]
+  subscription Subscription?
+}
+
+model UserOrganization {
+  id             String   @id @default(uuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+
+  role           Role         @default(SUPERADMIN)
+
+  @@unique([userId, organizationId])
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+  USER
+}
+
+model Subscription {
+  id             String             @id @default(uuid())
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  deletedAt      DateTime?
+
+  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String             @unique
+
+  subscriptionTier SubscriptionTier
+
+  identifier     String?
+
+  totalChannels  Int                @default(5)
+  postsPerMonth  Int                @default(400)
+
+  cancelAt       DateTime?
+  isLifetime     Boolean            @default(false)
+  period         SubscriptionPeriod @default(MONTHLY)
+}
+
+enum SubscriptionTier {
+  STANDARD
+  PRO
+  ULTIMATE
+}
+
+enum SubscriptionPeriod {
+  MONTHLY
+  YEARLY
+  LIFETIME
+}
