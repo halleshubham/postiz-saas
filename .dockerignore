@@ -1,0 +1,9 @@
+.git
+.next
+node_modules
+.env*
+!.env.example
+*.md
+.wasp
+postiz-app
+prisma-postiz
