@@ -1,28 +1,23 @@
-// =============================== IMPORTANT =================================
-// This file is mainly used for Wasp IDE support.
-//
-// Wasp will compile your code with slightly different (less strict) compilerOptions.
-// You can increase the configuration's strictness (e.g., by adding
-// "noUncheckedIndexedAccess": true), but you shouldn't reduce it (e.g., by
-// adding "strict": false). Just keep in mind that this will only affect your
-// IDE support, not the actual compilation.
-//
-// Full TypeScript configurability is coming very soon :)
 {
   "compilerOptions": {
-    "module": "esnext",
-    "composite": true,
-    "target": "esnext",
-    "moduleResolution": "bundler",
-    "jsx": "preserve",
-    "strict": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "moduleDetection": "force",
+    "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "skipLibCheck": true,
     "allowJs": true,
-    "outDir": ".wasp/out/user"
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-  "include": ["src"]
+  "include": ["next-env.d.ts", "src/app/**/*.ts", "src/app/**/*.tsx", "src/components/**/*.ts", "src/components/**/*.tsx", "src/lib/**/*.ts", "src/hooks/**/*.ts", "src/middleware.ts", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", "postiz-app", ".wasp", "src/postiz-db", "src/payment", "src/landing-page", "src/legal", "src/user", "src/analytics", "src/postiz", "src/client", "src/admin", "src/auth", "src/server", "src/shared"]
 }

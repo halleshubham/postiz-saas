@@ -1,13 +1,10 @@
 services:
-  # ── SaaS PostgreSQL database ──────────────────────────────────────────
   db:
     image: postgres:16-alpine
     restart: unless-stopped
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_USER: postiz_saas
-      POSTGRES_PASSWORD: postiz_saas
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: postiz_saas
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -17,19 +14,17 @@ services:
       timeout: 5s
       retries: 5
 
-  # ── Wasp app (SSR — serves both API and client on port 3001) ─────────
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - "3001:3001"
-    volumes:
-      - ./.env.server.production:/app/env/server.env:ro
+      - "3000:3000"
+    env_file: .env.production
+    command: >
+      sh -c "npx prisma migrate deploy --schema=prisma/schema.prisma && node server.js"
 
 volumes:
   postgres_data:
