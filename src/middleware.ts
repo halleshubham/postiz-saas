@@ -1,22 +1,17 @@
-import { getToken } from "next-auth/jwt";
-import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { NextResponse } from "next/server";
 
 const protectedPaths = ["/dashboard", "/account", "/checkout"];
 const adminPaths = ["/admin"];
-const authPaths = ["/login", "/signup", "/verify-email", "/request-reset", "/reset-password"];
+const authPages = ["/login", "/signup", "/verify-email", "/request-reset", "/reset-password"];
 
-export async function middleware(req: NextRequest) {
-  const token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
-  });
-
+export default auth((req) => {
   const { pathname } = req.nextUrl;
-  const isLoggedIn = !!token;
-  const isAdmin = (token as any)?.isAdmin === true;
+  const isLoggedIn = !!req.auth;
+  const isAdmin = (req.auth?.user as any)?.isAdmin === true;
 
-  // Redirect logged-in users away from auth pages
-  if (isLoggedIn && authPaths.some((p) => pathname === p || pathname.startsWith(p + "?"))) {
+  // Redirect logged-in users away from auth pages (exact match only)
+  if (isLoggedIn && authPages.includes(pathname)) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
@@ -38,7 +33,7 @@ export async function middleware(req: NextRequest) {
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon\\.ico).*)"],
